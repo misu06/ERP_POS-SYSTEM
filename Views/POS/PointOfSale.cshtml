@@ -1,0 +1,859 @@
+﻿@{
+    ViewData["Title"] = "Point of Sale";
+    Layout = null;
+}
+@model List<WebApplication1.Models.Product>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Point of Sale - POS System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f3f4f6;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        /* Sidebar */
+        .main-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: white;
+            border-right: 1px solid #dcdcdc;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            background: #1e88e5;
+            color: white;
+            padding: 18px 25px;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .menu-item {
+            padding: 15px 24px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #222;
+            text-decoration: none;
+            transition: 0.3s;
+            font-size: 16px;
+        }
+
+            .menu-item:hover {
+                background: #eef5ff;
+                color: #1976d2;
+            }
+
+            .menu-item.active {
+                background: #2196f3;
+                color: white;
+            }
+
+            .menu-item i {
+                width: 24px;
+                font-size: 18px;
+            }
+
+        /* Content */
+        .content {
+            margin-left: 280px;
+            width: calc(100% - 280px);
+        }
+
+        .topbar {
+            height: 70px;
+            background: #1976d2;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+        }
+
+        .topbar-title {
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .profile-circle {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: #42a5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .page-content {
+            padding: 25px;
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: #111827;
+            margin-bottom: 20px;
+        }
+
+        /* POS Layout */
+        .pos-layout {
+            display: grid;
+            grid-template-columns: 1fr 450px;
+            gap: 25px;
+        }
+
+        /* Left Panel - Products */
+        .products-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .scan-section {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .scan-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+        }
+
+            .scan-input:focus {
+                outline: none;
+                border-color: #1976d2;
+            }
+
+        .btn-scan {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 0 25px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .category-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .category-tab {
+            padding: 8px 20px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+            .category-tab.active {
+                background: #1976d2;
+                color: white;
+            }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .product-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+            .product-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                border-color: #1976d2;
+            }
+
+            .product-card .product-name {
+                font-weight: 700;
+                font-size: 14px;
+                margin: 8px 0 4px;
+            }
+
+            .product-card .product-price {
+                color: #1976d2;
+                font-weight: 800;
+                font-size: 16px;
+            }
+
+            .product-card .product-stock {
+                font-size: 11px;
+                color: #666;
+            }
+
+            .product-card.disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+        /* Right Panel - Cart */
+        .cart-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+
+        .customer-section {
+            margin-bottom: 20px;
+        }
+
+            .customer-section input {
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 10px;
+                margin-bottom: 10px;
+            }
+
+        .payment-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .payment-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+            .payment-btn.active {
+                border-color: #1976d2;
+                background: #e3f2fd;
+                color: #1976d2;
+            }
+
+        .discount-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+            .discount-section input {
+                width: 80px;
+                padding: 8px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                text-align: center;
+            }
+
+        /* Cart Table */
+        .cart-table-container {
+            max-height: 350px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .cart-table {
+            width: 100%;
+            font-size: 13px;
+        }
+
+            .cart-table th, .cart-table td {
+                padding: 10px 5px;
+                text-align: left;
+                border-bottom: 1px solid #eee;
+            }
+
+            .cart-table .qty-input {
+                width: 50px;
+                padding: 5px;
+                text-align: center;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+            }
+
+        .remove-item {
+            color: #d32f2f;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 16px;
+        }
+
+        /* Totals */
+        .totals {
+            border-top: 2px solid #e0e0e0;
+            padding-top: 15px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+            .total-row.grand-total {
+                font-size: 20px;
+                font-weight: 800;
+                color: #1976d2;
+                border-top: 1px solid #ddd;
+                padding-top: 10px;
+                margin-top: 5px;
+            }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn-complete {
+            flex: 2;
+            background: #2e7d32;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .btn-clear {
+            flex: 1;
+            background: #d32f2f;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 700;
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        @@media(max-width: 992px) {
+            .sidebar {
+                width: 100%;
+                position: relative;
+            }
+
+            .content {
+                margin-left: 0;
+            }
+
+            .pos-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Toast Notification */
+        .toast-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+            .toast-notification.success {
+                background: #2e7d32;
+            }
+
+            .toast-notification.error {
+                background: #d32f2f;
+            }
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Modal */
+        .modal-content {
+            border-radius: 20px;
+        }
+
+        .receipt-content {
+            font-family: monospace;
+            font-size: 12px;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">SmartPOS ERP</div>
+            <a href="/Manager/Dashboard" class="menu-item"><i class="fa-solid fa-table-columns"></i> Manager Dashboard</a>
+            <a href="/Manager/Products" class="menu-item"><i class="fa-solid fa-box"></i> Products</a>
+            <a href="/Inventory/InventoryManagement" class="menu-item"><i class="fa-solid fa-warehouse"></i> Inventory</a>
+            <a href="/POS/PointOfSale" class="menu-item active"><i class="fa-solid fa-cash-register"></i> Point of Sale</a>
+            <a href="/Manager/Customers" class="menu-item"><i class="fa-solid fa-users"></i> Customers</a>
+            <a href="/Manager/Suppliers" class="menu-item"><i class="fa-solid fa-truck"></i> Suppliers</a>
+            <a href="/Manager/Purchases" class="menu-item"><i class="fa-solid fa-cart-shopping"></i> Purchases</a>
+            <a href="/Manager/Employees" class="menu-item"><i class="fa-solid fa-user-tie"></i> Employees</a>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            <div class="topbar">
+                <div class="topbar-title">Point of Sale Management System</div>
+                <div class="profile-circle">M</div>
+            </div>
+
+            <div class="page-content">
+                <div class="page-title">
+                    <i class="fa-solid fa-cash-register"></i> Point of Sale (POS)
+                </div>
+
+                <div class="pos-layout">
+                    <!-- Left Panel - Scan & Select Products -->
+                    <div class="products-panel">
+                        <div class="scan-section">
+                            <input type="text" id="barcodeInput" class="scan-input" placeholder="Scan Barcode" autofocus>
+                            <button class="btn-scan" onclick="scanBarcode()"><i class="fa-solid fa-qrcode"></i> ADD</button>
+                        </div>
+
+                        <div class="category-tabs" id="categoryTabs">
+                            <button class="category-tab active" data-category="all">All Products</button>
+                            <button class="category-tab" data-category="Beverages">Beverages</button>
+                            <button class="category-tab" data-category="Snacks">Snacks</button>
+                            <button class="category-tab" data-category="Dairy">Dairy</button>
+                            <button class="category-tab" data-category="Bakery">Bakery</button>
+                        </div>
+
+                        <div class="products-grid" id="productsGrid"></div>
+                    </div>
+
+                    <!-- Right Panel - Shopping Cart -->
+                    <div class="cart-panel">
+                        <div class="customer-section">
+                            <input type="text" id="customerName" placeholder="Customer Name (Optional)">
+                            <input type="text" id="customerPhone" placeholder="Phone Number">
+                        </div>
+
+                        <div class="payment-section">
+                            <button class="payment-btn active" data-method="Cash" onclick="selectPaymentMethod('Cash')"><i class="fa-solid fa-money-bill"></i> Cash</button>
+                            <button class="payment-btn" data-method="Card" onclick="selectPaymentMethod('Card')"><i class="fa-solid fa-credit-card"></i> Card</button>
+                            <button class="payment-btn" data-method="Mobile" onclick="selectPaymentMethod('Mobile')"><i class="fa-solid fa-mobile-alt"></i> Mobile</button>
+                        </div>
+
+                        <div class="discount-section">
+                            <span>Discount %</span>
+                            <input type="number" id="discountPercent" value="0" step="1" min="0" max="100" onchange="updateTotals()">
+                            <span>%</span>
+                        </div>
+
+                        <div class="cart-table-container">
+                            <table class="cart-table">
+                                <thead>
+                                    <tr><th>Product</th><th>Price</th><th>Qty</th><th>Subtotal</th><th></th></tr>
+                                </thead>
+                                <tbody id="cartItems"></tbody>
+                            </table>
+                            <div id="emptyCartMessage" class="empty-cart">
+                                <i class="fa-solid fa-shopping-cart" style="font-size: 48px; color: #ccc;"></i>
+                                <p>Cart is empty. Scan or select products to add</p>
+                            </div>
+                        </div>
+
+                        <div class="totals">
+                            <div class="total-row"><span>Subtotal:</span><span id="subtotal">$0.00</span></div>
+                            <div class="total-row"><span>Discount (<span id="discountPercentDisplay">0</span>%):</span><span id="discountAmount">-$0.00</span></div>
+                            <div class="total-row"><span>Tax (8%):</span><span id="taxAmount">+$0.00</span></div>
+                            <div class="total-row grand-total"><span>TOTAL:</span><span id="totalAmount">$0.00</span></div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="btn-complete" onclick="completeSale()"><i class="fa-solid fa-check-circle"></i> COMPLETE SALE</button>
+                            <button class="btn-clear" onclick="clearCart()"><i class="fa-solid fa-trash"></i> CLEAR CART</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fa-solid fa-credit-card"></i> Payment</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Total Amount</label>
+                        <input type="text" id="modalTotal" class="form-control" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Amount Paid</label>
+                        <input type="number" id="amountPaid" class="form-control" step="0.01" oninput="calculateChange()">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Change Due</label>
+                        <input type="text" id="changeDue" class="form-control" readonly>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="processPayment()">Complete Payment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receipt Modal -->
+    <div class="modal fade" id="receiptModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Receipt</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body receipt-content" id="receiptContent"></div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> Print</button>
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let products = [];
+        let cart = [];
+        let selectedPaymentMethod = "Cash";
+        let taxRate = 0.08;
+
+        // Load products on page load
+        async function loadProducts() {
+            const response = await fetch('/POS/GetProducts');
+            products = await response.json();
+            renderProducts();
+        }
+
+        function renderProducts() {
+            const activeCategory = document.querySelector('.category-tab.active').dataset.category;
+            const filtered = activeCategory === 'all' ? products : products.filter(p => p.category === activeCategory);
+
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = filtered.map(p => `
+                <div class="product-card ${p.quantity <= 0 ? 'disabled' : ''}" onclick="addToCart('${p.productId}')">
+                    <i class="fa-solid fa-box" style="font-size: 32px; color: #1976d2;"></i>
+                    <div class="product-name">${p.productName}</div>
+                    <div class="product-price">$${p.price.toFixed(2)}</div>
+                    <div class="product-stock">Stock: ${p.quantity}</div>
+                </div>
+            `).join('');
+        }
+
+        function scanBarcode() {
+            const barcode = document.getElementById('barcodeInput').value.trim();
+            if (!barcode) return;
+
+            fetch(`/POS/GetProductByBarcode?barcode=${barcode}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        addProductToCart(data.product);
+                    } else {
+                        showToast(data.message, 'error');
+                    }
+                });
+
+            document.getElementById('barcodeInput').value = '';
+            document.getElementById('barcodeInput').focus();
+        }
+
+        function addToCart(productId) {
+            const product = products.find(p => p.productId === productId);
+            if (product && product.quantity > 0) {
+                addProductToCart(product);
+            } else {
+                showToast('Product out of stock!', 'error');
+            }
+        }
+
+        function addProductToCart(product) {
+            const existing = cart.find(item => item.productId === product.productId);
+            if (existing) {
+                if (existing.quantity < product.quantity) {
+                    existing.quantity++;
+                } else {
+                    showToast('Not enough stock!', 'error');
+                    return;
+                }
+            } else {
+                cart.push({
+                    productId: product.productId,
+                    productName: product.productName,
+                    price: product.price,
+                    quantity: 1,
+                    maxStock: product.quantity
+                });
+            }
+            renderCart();
+            updateTotals();
+        }
+
+        function updateCartQuantity(productId, newQuantity) {
+            const item = cart.find(i => i.productId === productId);
+            const product = products.find(p => p.productId === productId);
+
+            if (item && product) {
+                if (newQuantity > product.quantity) {
+                    showToast(`Only ${product.quantity} items available!`, 'error');
+                    return;
+                }
+                if (newQuantity <= 0) {
+                    removeCartItem(productId);
+                } else {
+                    item.quantity = newQuantity;
+                }
+                renderCart();
+                updateTotals();
+            }
+        }
+
+        function removeCartItem(productId) {
+            cart = cart.filter(i => i.productId !== productId);
+            renderCart();
+            updateTotals();
+        }
+
+        function renderCart() {
+            const tbody = document.getElementById('cartItems');
+            const emptyMessage = document.getElementById('emptyCartMessage');
+
+            if (cart.length === 0) {
+                tbody.innerHTML = '';
+                emptyMessage.style.display = 'block';
+                return;
+            }
+
+            emptyMessage.style.display = 'none';
+            tbody.innerHTML = cart.map(item => `
+                <tr>
+                    <td>${item.productName}</td>
+                    <td>$${item.price.toFixed(2)}</td>
+                    <td><input type="number" class="qty-input" value="${item.quantity}" min="1" onchange="updateCartQuantity('${item.productId}', parseInt(this.value))"></td>
+                    <td>$${(item.price * item.quantity).toFixed(2)}</td>
+                    <td><button class="remove-item" onclick="removeCartItem('${item.productId}')"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>
+            `).join('');
+        }
+
+        function updateTotals() {
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const discountPercent = parseFloat(document.getElementById('discountPercent').value) || 0;
+            const discountAmount = subtotal * (discountPercent / 100);
+            const taxableAmount = subtotal - discountAmount;
+            const taxAmount = taxableAmount * taxRate;
+            const total = taxableAmount + taxAmount;
+
+            document.getElementById('subtotal').innerText = `$${subtotal.toFixed(2)}`;
+            document.getElementById('discountPercentDisplay').innerText = discountPercent;
+            document.getElementById('discountAmount').innerText = `-$${discountAmount.toFixed(2)}`;
+            document.getElementById('taxAmount').innerText = `+$${taxAmount.toFixed(2)}`;
+            document.getElementById('totalAmount').innerText = `$${total.toFixed(2)}`;
+        }
+
+        function selectPaymentMethod(method) {
+            selectedPaymentMethod = method;
+            document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.payment-btn[data-method="${method}"]`).classList.add('active');
+        }
+
+        function completeSale() {
+            if (cart.length === 0) {
+                showToast('Cart is empty!', 'error');
+                return;
+            }
+
+            const total = parseFloat(document.getElementById('totalAmount').innerText.replace('$', ''));
+            document.getElementById('modalTotal').value = `$${total.toFixed(2)}`;
+            document.getElementById('amountPaid').value = total;
+            document.getElementById('changeDue').value = '$0.00';
+            new bootstrap.Modal(document.getElementById('paymentModal')).show();
+        }
+
+        function calculateChange() {
+            const total = parseFloat(document.getElementById('modalTotal').value.replace('$', ''));
+            const paid = parseFloat(document.getElementById('amountPaid').value) || 0;
+            const change = paid - total;
+            document.getElementById('changeDue').value = `$${change.toFixed(2)}`;
+        }
+
+        function processPayment() {
+            const total = parseFloat(document.getElementById('modalTotal').value.replace('$', ''));
+            const amountPaid = parseFloat(document.getElementById('amountPaid').value) || 0;
+
+            if (amountPaid < total) {
+                showToast('Insufficient payment amount!', 'error');
+                return;
+            }
+
+            const saleRequest = {
+                Items: cart,
+                CustomerName: document.getElementById('customerName').value || 'Walk-in Customer',
+                CustomerEmail: '',
+                CustomerPhone: document.getElementById('customerPhone').value || '',
+                PaymentMethod: selectedPaymentMethod,
+                DiscountPercentage: parseFloat(document.getElementById('discountPercent').value) || 0,
+                TaxRate: taxRate,
+                AmountPaid: amountPaid
+            };
+
+            fetch('/POS/ProcessSale', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(saleRequest)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+                    showReceipt(data.invoiceNumber, amountPaid, data.changeDue);
+                    clearCart();
+                    loadProducts();
+                    showToast(data.message, 'success');
+                } else {
+                    showToast(data.message, 'error');
+                }
+            });
+        }
+
+        function showReceipt(invoiceNumber, amountPaid, changeDue) {
+            const subtotal = parseFloat(document.getElementById('subtotal').innerText.replace('$', ''));
+            const discountPercent = parseFloat(document.getElementById('discountPercent').value) || 0;
+            const discountAmount = subtotal * (discountPercent / 100);
+            const taxableAmount = subtotal - discountAmount;
+            const taxAmount = taxableAmount * taxRate;
+            const total = parseFloat(document.getElementById('totalAmount').innerText.replace('$', ''));
+
+            const receiptHtml = `
+                <div style="text-align: center;">
+                    <h4>SmartPOS</h4>
+                    <p>123 Main Street<br>Phone: (555) 123-4567</p>
+                    <hr>
+                    <p><strong>Invoice: ${invoiceNumber}</strong></p>
+                    <p>Date: ${new Date().toLocaleString()}</p>
+                    <p>Customer: ${document.getElementById('customerName').value || 'Walk-in Customer'}</p>
+                    <hr>
+                    <table style="width: 100%; font-size: 12px;">
+                        <tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>
+                        ${cart.map(item => `<tr><td>${item.productName}</td><td>${item.quantity}</td><td>$${item.price.toFixed(2)}</td><td>$${(item.price * item.quantity).toFixed(2)}</td></tr>`).join('')}
+                    </table>
+                    <hr>
+                    <p>Subtotal: $${subtotal.toFixed(2)}</p>
+                    <p>Discount (${discountPercent}%): -$${discountAmount.toFixed(2)}</p>
+                    <p>Tax (8%): +$${taxAmount.toFixed(2)}</p>
+                    <p><strong>TOTAL: $${total.toFixed(2)}</strong></p>
+                    <p>Paid: $${amountPaid.toFixed(2)}</p>
+                    <p>Change: $${changeDue.toFixed(2)}</p>
+                    <hr>
+                    <p>Payment: ${selectedPaymentMethod}</p>
+                    <p><strong>Thank you for shopping!</strong></p>
+                </div>
+            `;
+
+            document.getElementById('receiptContent').innerHTML = receiptHtml;
+            new bootstrap.Modal(document.getElementById('receiptModal')).show();
+        }
+
+        function clearCart() {
+            cart = [];
+            renderCart();
+            updateTotals();
+            document.getElementById('customerName').value = '';
+            document.getElementById('customerPhone').value = '';
+            document.getElementById('discountPercent').value = '0';
+            selectPaymentMethod('Cash');
+        }
+
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `toast-notification ${type}`;
+            toast.innerHTML = `<i class="fa-solid fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // Event Listeners
+        document.getElementById('barcodeInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') scanBarcode();
+        });
+
+        document.querySelectorAll('.category-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                renderProducts();
+            });
+        });
+
+        // Initialize
+        loadProducts();
+        document.getElementById('barcodeInput').focus();
+    </script>
+</body>
+</html>
